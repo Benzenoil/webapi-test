@@ -13,7 +13,9 @@ router = routers.DefaultRouter()
 
 urlpatterns = [
     path('', include(router.urls)),
-   path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-   path('users/', views.rest_users, name='rest-users'),
-   # path('items/', views.rest_items, name='rest-items')
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('users/', views.rest_users, name='rest-users'),
+    path('signup/', views.rest_signup, name='rest-signup'),
+    path('snippets/', views.snippet_list, name='snippet_list'),
+    path('snippets/<int:pk>/', views.snippet_detail, name='snippet_detail'),
 ]
