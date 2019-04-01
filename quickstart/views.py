@@ -1,32 +1,39 @@
-# from django.contrib.auth.models import User, Group
-from rest_framework import viewsets
-from quickstart.serializers import UserSerializer, SnippetSerializer
-from django.http import HttpResponse
-from django.http import JsonResponse
+from quickstart.serializers import SnippetSerializer, CreateUserSerializer, UserSerializer
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
-from .models import User, Snippet
+from .models import Snippet, Signup
 
-
-@csrf_exempt
-def rest_users(request):
-    if request.method == "GET":
-        users = User.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return JsonResponse(serializer.data, safe=False)
 
 @csrf_exempt
 def rest_signup(request):
-    if request.method == "POST":
-        data = JSONParser().parse(request)
-        serializer = UserSerializer(data=data)
+    if request.method == 'POST':
+        serializer = CreateUserSerializer(data=request.POST)
 
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data, status=201)
+            response_data = {'message': 'Account successfully created', 'user': serializer.data}
+            response_data['user'].pop('password', None)
+            return JsonResponse(response_data, status=200)
 
-        return JsonResponse(serializer.errors, status=400)
+        response_data = {'message': 'Account creation failed', 'cause': serializer.errors}
+        return JsonResponse(response_data, status=400)
+
+
+@csrf_exempt
+def rest_getuser_detail(request, pid):
+    try:
+        user = Signup.objects.get(user_id=pid)
+    except Signup.DoesNotExist:
+        response_data = {'message': 'No User found'}
+        return JsonResponse(response_data, status=404)
+
+    if request.method == 'GET':
+        serializer = UserSerializer(user)
+
+        response_data = {'message': 'User details by user_id', 'user': serializer.data}
+        return JsonResponse(response_data, status=200)
+
 
 @csrf_exempt
 def snippet_list(request):
@@ -39,8 +46,9 @@ def snippet_list(request):
         return JsonResponse(serializer.data, safe=False)
 
     elif request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = SnippetSerializer(data=data)
+
+        # data = JSONParser().parse(request)
+        serializer = SnippetSerializer(data=request.POST)
         if serializer.is_valid():
             serializer.save()
             return JsonResponse(serializer.data, status=201)

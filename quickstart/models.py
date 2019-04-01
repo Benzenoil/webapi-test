@@ -1,12 +1,22 @@
 from django.db import models
+from django.core.validators import RegexValidator
 
 # Create your models here.
+class Signup(models.Model):
+    user_id = models.CharField(max_length=20, unique=True,
+                               validators=[RegexValidator(regex=r'^[A-Za-z0-9]+$',
+                                                          message="there is invalid char in used",
+                                                          )]
+                               )
 
-class User(models.Model):
-    user_id = models.CharField(max_length=255, unique=True)
-    # password = models.CharField(max_length=255)
-    nickname = models.CharField(max_length=255)
-    comment = models.CharField(max_length=255)
+    password = models.CharField(max_length=20,
+                                validators=[RegexValidator(regex=r'^[A-Za-z0-9]+$',
+                                                           message="there is invalid char in used",
+                                                           )]
+                                )
+
+    nickname = models.TextField(null=True)
+    comment = models.TextField(null=True)
 
 from pygments.lexers import get_all_lexers
 from pygments.styles import get_all_styles
