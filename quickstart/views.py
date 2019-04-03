@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse, QueryDict
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 from .models import Snippet, User
+import base64
 
 
 @csrf_exempt
@@ -27,6 +28,14 @@ def rest_getuser_detail(request, pid):
     except User.DoesNotExist:
         response_data = {'message': 'No User found'}
         return JsonResponse(response_data, status=404)
+
+    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+    token_type, _, credentials = auth_header.partition(' ')
+
+    target = bytes('{0}:{1}'.format(user.user_id, user.password), 'utf-8')
+    expected = base64.b64encode(target).decode()
+    if token_type != 'Basic' or credentials != expected:
+        return JsonResponse({'message': 'Authentication Failed'}, status=401)
 
     if request.method == 'GET':
         serializer = UserSerializer(user)
