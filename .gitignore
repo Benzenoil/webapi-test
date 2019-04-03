@@ -3,3 +3,4 @@ venv/
 __pycache__
 quickstart.tar.gz
 db.sqlite3
+.quickstart/migrations/

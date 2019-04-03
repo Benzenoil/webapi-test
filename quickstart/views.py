@@ -1,8 +1,8 @@
-from quickstart.serializers import SnippetSerializer, CreateUserSerializer, UserSerializer
-from django.http import HttpResponse, JsonResponse
+from quickstart.serializers import SnippetSerializer, CreateUserSerializer, UserSerializer, UpdateUserSerializer
+from django.http import HttpResponse, JsonResponse, QueryDict
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
-from .models import Snippet, Signup
+from .models import Snippet, User
 
 
 @csrf_exempt
@@ -23,8 +23,8 @@ def rest_signup(request):
 @csrf_exempt
 def rest_getuser_detail(request, pid):
     try:
-        user = Signup.objects.get(user_id=pid)
-    except Signup.DoesNotExist:
+        user = User.objects.get(user_id=pid)
+    except User.DoesNotExist:
         response_data = {'message': 'No User found'}
         return JsonResponse(response_data, status=404)
 
@@ -33,6 +33,66 @@ def rest_getuser_detail(request, pid):
 
         response_data = {'message': 'User details by user_id', 'user': serializer.data}
         return JsonResponse(response_data, status=200)
+    elif request.method == 'PATCH':
+        data = QueryDict(request.body)
+
+        user_id = data.get('user_id', None)
+        password = data.get('password', None)
+        nickname = data.get('nickname', None)
+        comment = data.get('comment', None)
+
+        response_cause = None
+        if user_id or password:
+            response_cause = 'not updatable user_id and password'
+        elif nickname is None and comment is None:
+            response_cause = 'required nickname or comment'
+
+        if response_cause:
+            response_data = {'message': 'User updation failed', 'cause': response_cause}
+            return JsonResponse(response_data, status=400)
+
+        serializer = UpdateUserSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            response_data = {'message': 'User successfully updated', 'recipt':[serializer.data]}
+            return JsonResponse(response_data, status=200)
+
+
+@csrf_exempt
+def rest_user_update(request, pid):
+    try:
+        user = User.objects.get(user_id=pid)
+    except User.DoesNotExist:
+        response_data = {'message': 'No User found'}
+        return JsonResponse(response_data, status=404)
+
+    if request.method == 'PATCH':
+
+        serializer = UpdateUserSerializer(data=request.POST)
+        serializer_exist = UpdateUserSerializer(user)
+
+        if serializer.is_valid():
+            user_id = serializer.data.get('user_id', None)
+            password = serializer.data.get('password', None)
+            nickname = serializer.data.get('nickname', None)
+            comment = serializer.data.get('comment', None)
+
+            if user_id or password:
+                response_cause = 'not updatable user_id and password'
+            elif nickname is None and comment is None:
+                response_cause = 'required nickname or comment'
+
+            if response_cause:
+                response_data = {'message': 'User updation failed', 'cause':response_cause}
+                return JsonResponse(response_data, status=400)
+                return JsonResponse()
+
+
+
+            serializer.save()
+
+
 
 
 @csrf_exempt
