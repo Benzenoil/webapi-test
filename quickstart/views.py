@@ -97,11 +97,27 @@ def rest_user_update(request, pid):
                 return JsonResponse(response_data, status=400)
                 return JsonResponse()
 
-
-
             serializer.save()
 
+@csrf_exempt
+def rest_user_delete(request):
+    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+    token_type, _, credentials = auth_header.partition(' ')
+    tmp = base64.b64decode(credentials).decode('utf-8')
+    a = tmp.split(':')
+    try:
+        user = User.objects.get(user_id=a[0])
+    except User.DoesNotExist:
+        # To "prevent" user to check whether the user is exist, use 401 instead of user not found
+        return JsonResponse({'message': 'Authentication Failed'}, status=401)
 
+    target = bytes('{0}:{1}'.format(user.user_id, user.password), 'utf-8')
+    expected = base64.b64encode(target).decode()
+    if token_type != 'Basic' or credentials != expected:
+        return JsonResponse({'message': 'Authentication Failed'}, status=401)
+    elif a[0] == user.user_id:
+        user.delete()
+        return JsonResponse({'message': 'Account and user successfully removed'}, status=200)
 
 
 @csrf_exempt
