@@ -1,20 +1,8 @@
 from rest_framework import serializers
-from .models import Snippet, Signup
-
-
-class CreateUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Signup
-        fields = ('user_id', 'nickname', 'password')
+from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Signup
-        fields = ('user_id', 'nickname', 'comment')
-
-
-class SnippetSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Snippet
-        fields = ('id', 'title', 'code', 'linenos', 'language', 'style')
+        model = User
+        fields = ('user_id', 'password', 'nickname', 'comment')
