@@ -1,4 +1,4 @@
-from quickstart.serializers import CreateUserSerializer, UserSerializer, UpdateUserSerializer
+from quickstart.serializers import UserSerializer
 from django.http import JsonResponse, QueryDict
 from django.views.decorators.csrf import csrf_exempt
 from .models import User
@@ -8,12 +8,30 @@ import base64
 @csrf_exempt
 def rest_signup(request):
     if request.method == 'POST':
-        serializer = CreateUserSerializer(data=request.POST)
+        data = request.POST
+        user_id = data.get('user_id', None)
+        password = data.get('password', None)
+        nickname = data.get('nickname', None)
+
+        if user_id is None or password is None:
+            return JsonResponse({'message': 'Account creation failed', 'cause': 'required user_id and password'},
+                                status=400)
+        elif len(user_id) < 6:
+            return JsonResponse({'message': 'Account creation failed', 'cause': 'The length of user_id is not enough'},
+                                status=400)
+        elif len(password) < 8:
+            return JsonResponse({'message': 'Account creation failed', 'cause': 'The length of password is not enough'},
+                                status=400)
+
+        serializer = UserSerializer(data=data, partial=True)
 
         if serializer.is_valid():
             serializer.save()
             response_data = {'message': 'Account successfully created', 'user': serializer.data}
             response_data['user'].pop('password', None)
+            response_data['user'].pop('comment', None)
+            if nickname is None:
+                response_data['user']['nickname'] = user_id
             return JsonResponse(response_data, status=200)
 
         response_data = {'message': 'Account creation failed', 'cause': serializer.errors}
@@ -40,7 +58,7 @@ def rest_getuser_detail(request, pid):
         response_data = {'message': 'User details by user_id', 'user': serializer.data}
         return JsonResponse(response_data, status=200)
     elif request.method == 'PATCH':
-        data = QueryDict(request.body, mutable=True)
+        data = QueryDict(request.body)
         user_id = data.get('user_id', None)
         password = data.get('password', None)
         nickname = data.get('nickname', None)
@@ -56,10 +74,8 @@ def rest_getuser_detail(request, pid):
             response_data = {'message': 'User updation failed', 'cause': response_cause}
             return JsonResponse(response_data, status=400)
 
-        # data['user_id'] = user.user_id
-        serializer = UpdateUserSerializer(data=data)
+        serializer = UserSerializer(user, data=data, partial=True)
         if serializer.is_valid():
-            serializer.update()
             serializer.save()
             response_data = {'message': 'User successfully updated', 'recipt':[serializer.data]}
             return JsonResponse(response_data, status=200)
