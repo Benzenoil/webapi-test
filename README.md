@@ -9,10 +9,10 @@ This repo is the record of my web api test(RESTful web service).
 * (RESTful API 设计指南 by 阮一峰)[http://www.ruanyifeng.com/blog/2014/05/restful_api.html]
 
 ## Endpoint
-POST /signup: 新建用户
-GET /user/{user_id}: 取得用户详细信息
-PATCH /user/{user_id}: 更新用户信息
-POST /user: 删除用户
+* POST /signup: 新建用户
+* GET /user/{user_id}: 取得用户详细信息
+* PATCH /user/{user_id}: 更新用户信息
+* POST /user: 删除用户
 
 ## Mission
 * 接口文档需要完成
